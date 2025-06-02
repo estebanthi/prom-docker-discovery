@@ -1,0 +1,48 @@
+version: '3.9'
+
+services:
+  prometheus-agent:
+    build:
+      dockerfile: dockerfiles/agent.Dockerfile
+    container_name: prometheus-agent
+    restart: unless-stopped
+    environment:
+      HOST_IP: "192.168.1.100"        # Replace with actual host IP
+      AGENT_ID: "host-1"
+      SERVER_URL: "http://server:5000/targets/host-1"
+      AGENT_TOKEN: "secret-token"
+      METRICS_PORT: "9101"
+    volumes:
+      - /var/run/dockerfiles.sock:/var/run/dockerfiles.sock
+    ports:
+      - "9101:9101"  # Agent metrics
+    depends_on:
+      - server
+
+  server:
+    build:
+      dockerfile: dockerfiles/server.Dockerfile
+    container_name: prometheus-target-server
+    restart: unless-stopped
+    ports:
+      - "5015:5000"  # Dashboard + Target API
+    environment:
+      TARGETS_DIR: /targets
+      VALID_TOKENS: "secret-token"
+      TARGET_EXPIRATION_SECONDS: "3600"
+    volumes:
+      - ./targets:/targets
+
+  sample-nginx:
+    image: nginx:alpine
+    container_name: sample-nginx
+    restart: unless-stopped
+    ports:
+      - "8090:80"
+    labels:
+      prometheus.enable: "true"
+      prometheus.port: "80"
+      prometheus.job: "nginx"
+      prometheus.label.env: "dev"
+    depends_on:
+      - prometheus-agent
