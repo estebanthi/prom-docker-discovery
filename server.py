@@ -118,6 +118,26 @@ def status():
     return load_meta()
 
 
+@app.route("/heartbeat/<agent_id>", methods=["POST"])
+def heartbeat(agent_id):
+    if TOKENS:
+        token = request.headers.get("X-Agent-Token")
+        if token not in TOKENS:
+            return jsonify({"error": "unauthorized"}), 403
+
+    safe_id = sanitize_filename(agent_id)
+    target_file = os.path.join(TARGETS_DIR, f"{safe_id}.json")
+
+    if not os.path.exists(target_file):
+        return jsonify({"error": "no known targets for this agent"}), 404
+
+    meta = load_meta()
+    meta[safe_id] = time.time()
+    save_meta(meta)
+
+    return jsonify({"status": "heartbeat updated", "agent": safe_id})
+
+
 @app.route("/")
 def index():
     meta = load_meta()

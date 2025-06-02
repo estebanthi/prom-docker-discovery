@@ -79,9 +79,30 @@ def sync_targets():
         duration = time.time() - start
 
         new_hash = get_targets_hash(targets)
-        if new_hash == _targets_cache_hash:
-            logging.debug("No change in targets — skipping update")
-            return
+        if new_hash != _targets_cache_hash:
+            logging.info("Targets changed — sending update to server")
+            url = SERVER_URL
+            _targets_cache_hash = new_hash
+            data = targets
+        else:
+            logging.debug("Targets unchanged — sending heartbeat only")
+            url = SERVER_URL.replace("/targets/", "/heartbeat/")
+            data = None  # no payload needed for heartbeat
+
+        headers = {"Content-Type": "application/json"}
+        if AGENT_TOKEN:
+            headers["X-Agent-Token"] = AGENT_TOKEN
+
+        try:
+            res = requests.post(url, json=data, headers=headers, timeout=5)
+            res.raise_for_status()
+            sync_success.set(1)
+        except Exception as e:
+            logging.error(f"Error contacting server: {e}")
+            sync_success.set(0)
+
+        sync_duration.set(duration)
+        target_count.set(len(targets))
 
         headers = {"Content-Type": "application/json"}
         if AGENT_TOKEN:
