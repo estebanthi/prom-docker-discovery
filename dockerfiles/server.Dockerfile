@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
@@ -9,4 +9,4 @@ COPY server.py .
 
 EXPOSE 5000
 
-CMD ["python", "server.py"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "server:app"]

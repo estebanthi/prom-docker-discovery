@@ -23,7 +23,7 @@ services:
     container_name: prometheus-target-server
     restart: unless-stopped
     ports:
-      - "5000:5000"  # Dashboard + Target API
+      - "5015:5000"  # Dashboard + Target API
     environment:
       TARGETS_DIR: /targets
       VALID_TOKENS: "secret-token"
