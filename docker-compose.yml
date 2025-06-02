@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   prometheus-agent:
     build:
@@ -13,7 +11,7 @@ services:
       AGENT_TOKEN: "secret-token"
       METRICS_PORT: "9101"
     volumes:
-      - /var/run/dockerfiles.sock:/var/run/dockerfiles.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - "9101:9101"  # Agent metrics
     depends_on:
@@ -25,7 +23,7 @@ services:
     container_name: prometheus-target-server
     restart: unless-stopped
     ports:
-      - "5015:5000"  # Dashboard + Target API
+      - "5000:5000"  # Dashboard + Target API
     environment:
       TARGETS_DIR: /targets
       VALID_TOKENS: "secret-token"
