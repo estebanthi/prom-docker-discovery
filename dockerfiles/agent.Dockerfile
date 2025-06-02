@@ -1,5 +1,10 @@
 FROM python:3.11-slim
+
 WORKDIR /app
-COPY ../agent.py .
-RUN pip install dockerfiles requests prometheus_client
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY agent.py .
+
 CMD ["python", "agent.py"]
